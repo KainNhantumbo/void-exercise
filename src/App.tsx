@@ -1,139 +1,139 @@
-import * as React from "react";
-import { useLocalStorage } from "@uidotdev/usehooks";
-import {
-  Bell,
-  BellDot,
-  ExternalLinkIcon,
-  HomeIcon,
-  ImagePlusIcon,
-  MessageCircleMore,
-  MoreHorizontal,
-  MoreVertical,
-  PartyPopperIcon,
-  SearchIcon,
-  Share,
-  Upload,
-  User,
-  Video,
-} from "lucide-react";
-import { postInitialData } from "./shared/constants";
-import { Post } from "./types";
+import { NetworkStatusIndicator } from '@/components/use-network-alert';
+import { initialDraft, postInitialData } from '@/shared/constants';
+import { useLocalStorage, useNetworkState } from '@uidotdev/usehooks';
+import * as Lucide from 'lucide-react';
+import moment from 'moment';
+import * as React from 'react';
+import { Post } from './types';
 
 export const App = () => {
-  const [posts, setPosts] = useLocalStorage<Post[]>("posts", postInitialData);
-  const [isOffline, setIsOffline] = React.useState(false);
-  
-  const [draft, setDraft] = React.useState({
-    text: "",
-    image: "",
-    video: "",
-  });
+  const { online: isOnline } = useNetworkState();
+  const [posts, setPosts] = useLocalStorage<Post[]>('posts', postInitialData);
+  const [draft, setDraft] = React.useState<typeof initialDraft>(initialDraft);
 
-  const createPost = () => {
-
-
-
-    const mockedPost :Post= {
+  const handleCreatePost = () => {
+    const mockedPost: Post = {
       id: crypto.randomUUID(),
       body: draft.text,
       createdAt: new Date().toISOString(),
-      needToSync:true,
+      needToSync: true,
       user: {
-        name: "",
-        image: ""
+        name: crypto.randomUUID().slice(0, 8).concat('-user'),
+        image: ''
       }
-    }
+    };
+    setPosts((state) => [...state, mockedPost]);
+    setDraft(initialDraft);
   };
 
+  React.useEffect(() => {
+    const unsavedPosts = posts.filter((post) => post.needToSync === true);
+
+    if (unsavedPosts.length > 0) {
+      if (!isOnline) {
+        return alert('You have posts that need to be synced');
+      }
+      // TODO: sync unsaved posts here
+    }
+  }, [isOnline, posts]);
+
   return (
-    <main className="w-full max-w-sm py-5 mx-auto relative">
-      <section className="flex items-center gap-3 p-3 justify-between border-b">
-        <h1 className="font-bold ">Home</h1>
-        <BellDot className="w-5 h-auto" />
-      </section>
+    <>
+      <NetworkStatusIndicator />
+      <main className="relative mx-auto w-full max-w-sm py-5">
+        <section className="flex items-center justify-between gap-3 border-b p-3">
+          <h1 className="font-bold ">Home</h1>
+          <Lucide.BellDot className="h-auto w-5" />
+        </section>
 
-      <section className="flex items-center justify-between gap-3 p-3 relative">
-        <div className="flex items-center gap-2">
-          <User className="w-8 h-auto p-1 rounded-full border" />
-          <input
-            type="text"
-            placeholder="Write a post..."
-            className="border rounded-full p-1 px-2"
-            value={draft.text}
-            onChange={(e) =>
-              setDraft((state) => ({ ...state, text: e.target.value }))
-            }
-          />
-        </div>
-        <div className="flex items-center gap-1">
-          <button className="grid place-content-center rounded-full bg-blue-500 p-1 border">
-            <span className="sr-only">create post</span>
-            <PartyPopperIcon className="h-auto w-4 stroke-white" />
+        <section className="relative flex items-center justify-between gap-3 p-3">
+          <div className="flex items-center gap-2">
+            <Lucide.User className="h-auto w-8 rounded-full border p-1" />
+            <input
+              type="text"
+              placeholder="Write a post..."
+              className="rounded-full border p-1 px-2"
+              value={draft.text}
+              onChange={(e) => setDraft((state) => ({ ...state, text: e.target.value }))}
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              title="Create new post"
+              onClick={handleCreatePost}
+              className="grid place-content-center rounded-full border bg-blue-500 p-1">
+              <span className="sr-only">Create post</span>
+              <Lucide.Send className="h-auto w-4 stroke-white" />
+            </button>
+            <button className="grid place-content-center rounded-full border bg-lime-700 p-1">
+              <Lucide.ImagePlusIcon className="h-auto w-4 stroke-white" />
+            </button>
+            <button className="grid place-content-center rounded-full border bg-yellow-500 p-1">
+              <Lucide.Video className="h-auto w-4 stroke-white" />
+            </button>
+          </div>
+        </section>
+
+        <ul className="flex flex-col border-t py-3">
+          {posts.length > 0 &&
+            posts
+              .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+              .map((post) => (
+                <li key={post.id} className="flex flex-col border-b p-3">
+                  <section className="flex flex-nowrap justify-between">
+                    <div className="flex items-center gap-2">
+                      {post.user.image && (
+                        <img
+                          src={post.user.image}
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
+                      )}
+                      {!post.user.image && (
+                        <Lucide.User className="h-auto w-8 rounded-full border p-1" />
+                      )}
+                      <div className="flex flex-col">
+                        <h3 className="text-nowrap text-sm font-medium">
+                          {post.user.name}
+                        </h3>
+                        <span className="text-sm">{moment().from(post.createdAt)}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-nowrap items-center gap-2">
+                      <a href={`/post/${post.id}`} className="grid place-content-center">
+                        <Lucide.ExternalLinkIcon className="h-auto w-4" />
+                      </a>
+                      <button className="grid place-content-center">
+                        <Lucide.MoreVertical className="h-auto w-4" />
+                      </button>
+                    </div>
+                  </section>
+                  <section className="my-3">
+                    <p>{post.body}</p>
+                  </section>
+                </li>
+              ))}
+        </ul>
+
+        <section className="fixed bottom-3 left-[calc(50%_-_125px)] flex w-[250px] items-center justify-evenly gap-1 rounded-full border-black bg-blue-500/60 p-2 backdrop-blur">
+          <button className="grid place-content-center rounded-full p-1 hover:bg-white/20 ">
+            <Lucide.HomeIcon className="h-auto w-4 stroke-white" />
           </button>
-          <button className="grid place-content-center rounded-full bg-lime-700 p-1 border">
-            <ImagePlusIcon className="h-auto w-4 stroke-white" />
+          <button className="grid place-content-center rounded-full p-1 hover:bg-white/20 ">
+            <Lucide.SearchIcon className="h-auto w-4 stroke-white" />
           </button>
-          <button className="grid place-content-center rounded-full bg-yellow-500 p-1 border">
-            <Video className="h-auto w-4 stroke-white" />
+          <button className="grid place-content-center rounded-full p-1 hover:bg-white/20 ">
+            <Lucide.Share className="h-auto w-4 stroke-white" />
           </button>
-        </div>
-      </section>
-
-      <ul className="flex flex-col border-t py-3">
-        {posts.length > 0 &&
-          posts.map((post) => (
-            <li key={post.id} className="border-b p-3 flex flex-col">
-              <section className="flex flex-nowrap justify-between">
-                <div className="flex items-center gap-2">
-                  {post.user.image && (
-                    <img
-                      src={post.user.image}
-                      className="rounded-full object-cover w-full max-w-[40px]"
-                    />
-                  )}
-                  {!post.user.image && (
-                    <User className="w-8 h-auto p-1 rounded-full border" />
-                  )}
-                  <h3>{post.user.name}</h3>
-                </div>
-
-                <div className="flex flex-nowrap gap-2 items-center">
-                  <a
-                    href={`/post/${post.id}`}
-                    className="grid place-content-center"
-                  >
-                    <ExternalLinkIcon className="h-auto w-4" />
-                  </a>
-                  <button className="grid place-content-center">
-                    <MoreVertical className="h-auto w-4" />
-                  </button>
-                </div>
-              </section>
-              <section>
-                <p>{post.body}</p>
-              </section>
-            </li>
-          ))}
-      </ul>
-
-      <section className="w-[250px] fixed rounded-full left-[calc(50%_-_125px)] bottom-3 p-2 bg-blue-500/60 backdrop-blur border-black flex items-center gap-1 justify-evenly">
-        <button className="grid place-content-center hover:bg-white/20 rounded-full p-1 ">
-          <HomeIcon className="h-auto w-4 stroke-white" />
-        </button>
-        <button className="grid place-content-center hover:bg-white/20 rounded-full p-1 ">
-          <SearchIcon className="h-auto w-4 stroke-white" />
-        </button>
-        <button className="grid place-content-center hover:bg-white/20 rounded-full p-1 ">
-          <Share className="h-auto w-4 stroke-white" />
-        </button>
-        <button className="grid place-content-center hover:bg-white/20 rounded-full p-1 ">
-          <MessageCircleMore className="h-auto w-4 stroke-white" />
-        </button>
-        <button className="grid place-content-center hover:bg-white/20 rounded-full p-1 ">
-          <User className="h-auto w-4 stroke-white" />
-        </button>
-      </section>
-    </main>
+          <button className="grid place-content-center rounded-full p-1 hover:bg-white/20 ">
+            <Lucide.MessageCircleMore className="h-auto w-4 stroke-white" />
+          </button>
+          <button className="grid place-content-center rounded-full p-1 hover:bg-white/20 ">
+            <Lucide.User className="h-auto w-4 stroke-white" />
+          </button>
+        </section>
+      </main>
+    </>
   );
 };
 

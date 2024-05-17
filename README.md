@@ -27,6 +27,8 @@ npm ci && npm run dev
 npm run build
 ```
 
+The app is served on https://localhost:3000
+
 ## ☘️ Find me!
 
 E-mail: [nhantumbok@gmail.com](nhantumbok@gmail.com 'Send an e-mail')\
@@ -34,7 +36,7 @@ Github: [https://github.com/KainNhantumbo](https://github.com/KainNhantumbo 'See
 Portfolio: [https://codenut-dev.vercel.app](https://codenut-dev.vercel.app 'See my portfolio website')\
 My Blog: [https://codenut-dev.vercel.app/en/blog](https://codenut-dev.vercel.app/en/blog 'Visit my blog site')
 
-#### If you like this project, let me know by leaving a star on this repository so I can keep improving this app or [send support](https://www.buymeacoffee.com/nhantumbokU/)!\*\* .😊😘
+#### If you like this project, let me know by leaving a star on this repository so I can keep improving this app or [send support](https://www.buymeacoffee.com/nhantumbokU/)!😊😘
 
 Best regards, Kain Nhantumbo.\
 ✌️🇲🇿 **Made with ❤ plus React + Vite and Typescript**
